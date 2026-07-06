@@ -1,30 +1,27 @@
 #!/bin/sh
-# Installs the locally-built n8n-nodes-smbclient package (mounted at
-# /opt/code-temp) into n8n's user nodes directory, then starts n8n.
+# Optional development entrypoint.
 #
-# The host must run `npm run build` (or `pnpm build`) first so that
-# /opt/code-temp/dist exists — n8n loads the compiled files, not the .ts.
+# In the published image the n8n-nodes-smbclient community node is already
+# installed in /home/node/.n8n/nodes at build time, so this script normally
+# just hands off to n8n's own entrypoint.
+#
+# For local development you can bind-mount this repo at /opt/code-temp and set
+# REINSTALL_SMB_NODE=true to override the pre-installed version with the one
+# you are currently editing.
 set -e
 
 SOURCE_DIR="/opt/code-temp"
 NODES_DIR="/home/node/.n8n/nodes"
 PKG_NAME="n8n-nodes-smbclient"
 
-if [ ! -d "$SOURCE_DIR/dist" ]; then
-	echo "WARNING: $SOURCE_DIR/dist not found."
-	echo "         Run 'npm run build' on the host, then restart this container."
-fi
-
-mkdir -p "$NODES_DIR"
-cd "$NODES_DIR"
-
-[ -f package.json ] || echo '{"name":"installed-nodes","private":true}' >package.json
-
-if [ ! -d "node_modules/$PKG_NAME" ] || [ "${REINSTALL_SMB_NODE:-false}" = "true" ]; then
-	echo "Installing $PKG_NAME from $SOURCE_DIR ..."
+if [ -d "$SOURCE_DIR/dist" ] && [ "${REINSTALL_SMB_NODE:-false}" = "true" ]; then
+	echo "Development mode: reinstalling $PKG_NAME from $SOURCE_DIR ..."
+	mkdir -p "$NODES_DIR"
+	cd "$NODES_DIR"
+	[ -f package.json ] || echo '{"name":"installed-nodes","private":true}' > package.json
 	npm install "$SOURCE_DIR" --no-audit --no-fund --loglevel error
 else
-	echo "$PKG_NAME already installed (set REINSTALL_SMB_NODE=true to refresh after a rebuild)."
+	echo "$PKG_NAME is pre-installed (set REINSTALL_SMB_NODE=true + mount /opt/code-temp to override)."
 fi
 
 # Hand off to n8n's own entrypoint.

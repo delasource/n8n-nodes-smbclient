@@ -1,5 +1,7 @@
-# Keep the derived n8n-smbclient Docker image in sync with the latest stable
-# upstream n8n release. Runs daily and on demand.
+# Build and publish a self-contained n8n-smbclient Docker image. The image
+# tracks the latest stable upstream n8n release and includes the
+# n8n-nodes-smbclient community node pre-installed, so it works out of the box
+# without a runtime bind-mount. Runs daily and on demand.
 #
 # Required repository secrets (set in Settings -> Secrets and variables -> Actions):
 #   DOCKERHUB_USERNAME  - Docker Hub username (e.g. delasrc)
